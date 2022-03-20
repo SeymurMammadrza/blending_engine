@@ -18,11 +18,17 @@ object Main {
       Offer(Contributor(name = "deutsche_bank"), 1.67, Currency.EUR, isBuying = false),
       Offer(Contributor(name = "deutsche_bank"), 1.72, Currency.EUR, isBuying = false),
       Offer(Contributor(name = "deutsche_bank"), 1.78, Currency.USD, isBuying = false),
-      Offer(Contributor(name = "deutsche_bank"), 1.72, Currency.USD, isBuying = false)
+      Offer(Contributor(name = "deutsche_bank"), 1.72, Currency.USD, isBuying = false),
+      Offer(Contributor(name = "deutsche_bank"), 1.82, Currency.JPY, isBuying = false),
+      Offer(Contributor(name = "deutsche_bank"), 1.85, Currency.JPY, isBuying = false),
+      Offer(Contributor(name = "deutsche_bank"), 1.87, Currency.JPY, isBuying = false)
     )
 
     system ! AddOffer(listOfOffers)
     system ! GetStateByCurrencyAndOperationType(Currency.EUR, isBuying = false)
+    system ! GetStateByCurrencyAndOperationType(Currency.EUR, isBuying = true)
+    system ! GetStateByCurrencyAndOperationType(Currency.USD, isBuying = false)
+    system ! GetStateByCurrencyAndOperationType(Currency.JPY, isBuying = false)
 
   }
 
