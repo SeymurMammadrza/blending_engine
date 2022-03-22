@@ -25,9 +25,12 @@ object OfferActor {
 
   final case class State(summary: (LazyList[Offer], Currency, BigDecimal, BigDecimal)) {
 
-    def addToState(newOffers: LazyList[Offer]): State = {
-      copy(summary = (newOffers, DEFAULT, 0, 0))
+    def addToState(newOffers: LazyList[Offer]): State = newOffers.length match {
+      case 0 => logger.warn("There are no offers received")
+        this
+      case _ => copy(summary = (newOffers, DEFAULT, 0, 0))
     }
+
 
     def returnLazyList: LazyList[Offer] = {
       val list = this.summary._1
@@ -42,12 +45,16 @@ object OfferActor {
       case (Some(currency: Currency), Some(isBuying: Boolean)) =>
         val list = summary._1.filter(offer => offer.currency == currency && offer.isBuying == isBuying)
         list.toList
-      case _ => List.empty
+      case _ =>
+        logger.warn("One of inputs or both do not exist")
+        List.empty
 
     }
 
     def averageRate(currency: Currency, isBuying: Boolean): BigDecimal = summary._1.length match {
-      case 0 => 0
+      case 0 =>
+        logger.warn("There are no offers")
+        0
       case _ =>
         val newList = filterOffers(Some(currency), Some(isBuying))
         val mean = newList.map(offer => offer.rate).sum / newList.length
@@ -55,7 +62,9 @@ object OfferActor {
     }
 
     def latestRate(currency: Currency, isBuying: Boolean): BigDecimal = summary._1.length match {
-      case 0 => 0
+      case 0 =>
+        logger.warn("There are no offers")
+        0
       case _ =>
         val newList = filterOffers(Some(currency), Some(isBuying))
         val latest = newList.last
