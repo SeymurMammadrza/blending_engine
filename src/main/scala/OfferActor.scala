@@ -37,8 +37,12 @@ object OfferActor {
       list
     }
 
-    def calculateAverageAndLatestOffers(currency: Currency, isBuying: Boolean): State = {
-      copy(summary = (returnLazyList, currency, averageRate(currency, isBuying), latestRate(currency, isBuying)))
+    def calculateAverageAndLatestOffers(currency: Option[Currency], isBuying: Option[Boolean]): State = (currency, isBuying) match {
+      case (Some(currency: Currency), Some(isBuying: Boolean)) =>
+        copy(summary = (returnLazyList, currency, averageRate(currency, isBuying), latestRate(currency, isBuying)))
+      case _ =>
+        logger.warn("One of inputs or both do not exist")
+        this
     }
 
     def filterOffers(currency: Option[Currency], isBuying: Option[Boolean]): List[Offer] = (currency, isBuying) match {
@@ -53,7 +57,7 @@ object OfferActor {
 
     def averageRate(currency: Currency, isBuying: Boolean): BigDecimal = summary._1.length match {
       case 0 =>
-        logger.warn("There are no offers")
+        logger.warn("There are no offers received")
         0
       case _ =>
         val newList = filterOffers(Some(currency), Some(isBuying))
@@ -63,7 +67,7 @@ object OfferActor {
 
     def latestRate(currency: Currency, isBuying: Boolean): BigDecimal = summary._1.length match {
       case 0 =>
-        logger.warn("There are no offers")
+        logger.warn("There are no offers received")
         0
       case _ =>
         val newList = filterOffers(Some(currency), Some(isBuying))
@@ -86,9 +90,9 @@ object OfferActor {
       case OfferAdded(offers) =>
         state.addToState(offers)
       case StateAcquired(currency, isBuying) =>
-        val newState = state.calculateAverageAndLatestOffers(currency, isBuying)
+        val newState = state.calculateAverageAndLatestOffers(Some(currency), Some(isBuying))
         logger.info(s"average rate for the currency : $currency is ${newState.summary._3} and latest rate is ${newState.summary._4} if it is  $isBuying for buying")
-        state.calculateAverageAndLatestOffers(currency, isBuying)
+        state.calculateAverageAndLatestOffers(Some(currency), Some(isBuying))
     }
   }
 
