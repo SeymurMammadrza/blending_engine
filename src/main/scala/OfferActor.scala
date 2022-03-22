@@ -23,30 +23,30 @@ object OfferActor {
 
   final case class OfferAdded(offers: LazyList[Offer]) extends Event
 
-  final case class State(summary: List[(LazyList[Offer], Currency, BigDecimal, BigDecimal)]) {
+  final case class State(summary: (LazyList[Offer], Currency, BigDecimal, BigDecimal)) {
 
     def addToState(newOffers: LazyList[Offer]): State = {
-      copy(summary = List((newOffers, DEFAULT, 0, 0)))
+      copy(summary = (newOffers, DEFAULT, 0, 0))
     }
 
     def returnLazyList: LazyList[Offer] = {
-      val list = this.summary.head._1
+      val list = this.summary._1
       list
     }
 
     def calculateAverageAndLatestOffers(currency: Currency, isBuying: Boolean): State = {
-      copy(summary = List((returnLazyList, currency, averageRate(currency, isBuying), latestRate(currency, isBuying))))
+      copy(summary = (returnLazyList, currency, averageRate(currency, isBuying), latestRate(currency, isBuying)))
     }
 
     def filterOffers(currency: Option[Currency], isBuying: Option[Boolean]): List[Offer] = (currency, isBuying) match {
       case (Some(currency: Currency), Some(isBuying: Boolean)) =>
-        val list = summary.flatMap(tuple => tuple._1.filter(offer => offer.currency == currency && offer.isBuying == isBuying))
-        list
+        val list = summary._1.filter(offer => offer.currency == currency && offer.isBuying == isBuying)
+        list.toList
       case _ => List.empty
 
     }
 
-    def averageRate(currency: Currency, isBuying: Boolean): BigDecimal = summary.flatMap(lazyList => lazyList._1).length match {
+    def averageRate(currency: Currency, isBuying: Boolean): BigDecimal = summary._1.length match {
       case 0 => 0
       case _ =>
         val newList = filterOffers(Some(currency), Some(isBuying))
@@ -54,7 +54,7 @@ object OfferActor {
         mean
     }
 
-    def latestRate(currency: Currency, isBuying: Boolean): BigDecimal = summary.flatMap(lazyList => lazyList._1).length match {
+    def latestRate(currency: Currency, isBuying: Boolean): BigDecimal = summary._1.length match {
       case 0 => 0
       case _ =>
         val newList = filterOffers(Some(currency), Some(isBuying))
@@ -78,7 +78,7 @@ object OfferActor {
         state.addToState(offers)
       case StateAcquired(currency, isBuying) =>
         val newState = state.calculateAverageAndLatestOffers(currency, isBuying)
-        logger.info(s"average rate for the currency : $currency is ${newState.summary.head._3} and latest rate is ${newState.summary.head._4} if it is  $isBuying for buying")
+        logger.info(s"average rate for the currency : $currency is ${newState.summary._3} and latest rate is ${newState.summary._4} if it is  $isBuying for buying")
         state.calculateAverageAndLatestOffers(currency, isBuying)
     }
   }
@@ -86,7 +86,7 @@ object OfferActor {
   def apply(): Behavior[Command] =
     EventSourcedBehavior[Command, Event, State](
       persistenceId = PersistenceId.ofUniqueId(UUID.randomUUID().toString),
-      emptyState = State(List.empty),
+      emptyState = State(LazyList.empty, DEFAULT, 0, 0),
       commandHandler = commandHandler,
       eventHandler = eventHandler
     )
