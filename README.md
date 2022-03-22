@@ -46,9 +46,9 @@ The collection of offers input is created manually in main class. For more advan
 -   To test the application simply send these commands (these commands are already in the main class):
 
 
-``system ! AddOffer(listOfOffers)``
+**system ! AddOffer(listOfOffers)**
 
-``system ! GetStateByCurrencyAndOperationType(Currency.EUR, isBuying = false)``
+**system ! GetStateByCurrencyAndOperationType(Currency.EUR, isBuying = false)**
 
 -   And resulting log should be :
 
