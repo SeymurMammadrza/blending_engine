@@ -80,8 +80,8 @@ object OfferActor {
         0
       case _ =>
         val newList = filterOffers(Some(currency), Some(isBuying))
-        val latest = newList.last
-        latest.rate
+        val offer: Offer = newList.find(_.date == newList.map(_.date).max).get
+        offer.rate
     }
 
   }
