@@ -5,6 +5,7 @@ import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 import model.Currency.{Currency, DEFAULT}
 import model.Offer
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 object OfferActor {
@@ -80,8 +81,23 @@ object OfferActor {
         0
       case _ =>
         val newList = filterOffers(Some(currency), Some(isBuying))
-        val offer: Offer = newList.find(_.date == newList.map(_.date).max).get
-        offer.rate
+        var temp: LocalDateTime = LocalDateTime.MIN
+
+        //        val offer: Offer = newList.find(_.date == newList.map(_.date).max).get
+        //        offer.rate
+
+        var rate: BigDecimal = 0
+
+        val calculatedRate: BigDecimal = {
+          for (offer <- newList) {
+            if (offer.date.isAfter(temp)) {
+              temp = offer.date
+              rate = offer.rate
+            }
+          }
+          rate
+        }
+        calculatedRate
     }
 
   }
